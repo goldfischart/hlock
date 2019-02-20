@@ -1,4 +1,5 @@
 <?php
+
 /**
  * hlock class
  * PHP Version 7
@@ -7,21 +8,15 @@
  *
  * @author    Harald Petrich <service@trebaxa.com>
  * @copyright 2018 - 2019 Harald Petrich
- * @license   http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
+ * @license   GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
  * @note      This program is distributed in the hope that it will be useful - WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. This project should help us developer to protect our PHP projects from
- * hacking.
- * 
- * This version is compatible with keimeno CMS, but can easly changed to be compatible with Wordpress, Joomla Typo3.
+ * FITNESS FOR A PARTICULAR PURPOSE. This project should help us developer to protect our PHP projects from hacking. Bad IPs will be reported to central server 
+ * and hlock updates hisself with a current list of bad ips, bots and SQL injection rules.
+ * Be part of the network and help us to get the web safer!
+ *  
+ * This version is compatible with keimeno CMS, but can easly changed to be compatible with Wordpress, Joomla and Typo3.
  * Just change the path to files and ensure the HLOCK_ROOT is successfully set.
- * 
- * How to implement?
- * add in index.php:
- * require (CMS_ROOT . 'includes/hlock.class.php');
- * hlock::run();
- * 
- * In keimenbo CMS the hlock project is already implemented in the core.
  */
 
 $dir = str_replace(DIRECTORY_SEPARATOR, '/', realpath(dirname(__FILE__)));
@@ -32,15 +27,17 @@ date_default_timezone_set('Europe/Berlin');
 
 class hlock {
 
-    protected static $hpath = HLOCK_ROOT . 'cache/accesslog/';
-    protected static $hlock_blocked_file = HLOCK_ROOT . 'includes/lib/hlock/hacklogblock_' . HLOCK_HOST . '.txt';
-    protected static $hlock_blacklist = HLOCK_ROOT . 'includes/lib/hlock/blacklist.json';
-    protected static $badips_file = HLOCK_ROOT . 'includes/lib/hlock/badips_' . HLOCK_HOST . '.txt';
-    protected static $badbots_file = HLOCK_ROOT . 'includes/lib/hlock/badbots_' . HLOCK_HOST . '.txt';
-    protected static $hcache_lifetime_hours = 3;
-    protected static $blacklis_lifetime_hours = 1;
-    protected static $log_lines_count = 98;
-    protected static $email = '';
+    protected static $config = array(
+        'hpath' => HLOCK_ROOT . 'cache/accesslog/',
+        'hlock_blocked_file' => HLOCK_ROOT . 'includes/lib/hlock/hacklogblock_' . HLOCK_HOST . '.txt',
+        'hlock_blacklist' => HLOCK_ROOT . 'includes/lib/hlock/blacklist.json',
+        'badips_file' => HLOCK_ROOT . 'includes/lib/hlock/badips_' . HLOCK_HOST . '.txt',
+        'badbots_file' => HLOCK_ROOT . 'includes/lib/hlock/badbots_' . HLOCK_HOST . '.txt',
+        'hcache_lifetime_hours' => 3,
+        'blacklis_lifetime_hours' => 1,
+        'log_lines_count' => 98,
+        'email' => '',
+        );
 
     /**
      * hlock::run()
@@ -48,19 +45,19 @@ class hlock {
      * @return void
      */
     public static function run() {
-        if (!is_dir(HLOCK_ROOT . 'cache/accesslog'))
-            mkdir(HLOCK_ROOT . 'cache/accesslog', 0755);
+        if (!is_dir(static::$config['hpath']))
+            mkdir(static::$config['hpath'], 0755);
 
-        if ($handle = opendir(static::$hpath)) {
+        if ($handle = opendir(static::$config['hpath'])) {
             while (false !== ($file = readdir($handle))) {
-                if ((integer)(time() - filemtime(static::$hpath . $file)) > (static::$hcache_lifetime_hours * 3600) && $file !== '.' && $file !== '..') {
-                    @unlink(static::$hpath . $file);
+                if ((integer)(time() - filemtime(static::$config['hpath'] . $file)) > (static::$config['hcache_lifetime_hours'] * 3600) && $file !== '.' && $file !== '..') {
+                    @unlink(static::$config['hpath'] . $file);
                 }
             }
         }
 
         $fname = (strstr($_SERVER['HTTP_USER_AGENT'], 'bot')) ? $_SERVER['HTTP_USER_AGENT'] : $_SERVER['HTTP_USER_AGENT'] . $_SERVER['REMOTE_ADDR'];
-        $hfile = static::$hpath . md5($fname);
+        $hfile = static::$config['hpath'] . md5($fname);
         $hcount = 0;
         if (is_file($hfile)) {
             $arr = explode(PHP_EOL, file_get_contents($hfile));
@@ -148,16 +145,16 @@ class hlock {
     public static function read_logs() {
         $k = 0;
         $result['hour_log'] = $result['blocked_bots'] = array();
-        if ($handle = opendir(static::$hpath)) {
+        if ($handle = opendir(static::$config['hpath'])) {
             while (false !== ($file = readdir($handle))) {
                 if ($file !== '.' && $file !== '..') {
-                    $result['hour_log'][] = explode(PHP_EOL, file_get_contents(static::$hpath . $file));
+                    $result['hour_log'][] = explode(PHP_EOL, file_get_contents(static::$config['hpath'] . $file));
                 }
                 $k++;
             }
         }
-        if (is_file(static::$hlock_blocked_file)) {
-            $blocked = explode(PHP_EOL, file_get_contents(static::$hlock_blocked_file));
+        if (is_file(static::$config['hlock_blocked_file'])) {
+            $blocked = explode(PHP_EOL, file_get_contents(static::$config['hlock_blocked_file']));
             foreach ($blocked as $key => $line) {
                 $result['blocked_bots'][] = explode("\t", $line);
             }
@@ -203,10 +200,10 @@ class hlock {
      * @return void
      */
     protected static function clear_blocked() {
-        if (is_file(static::$hlock_blocked_file) && filesize(static::$hlock_blocked_file) > 6000) {
-            $lines = self::read_lines_from_file(static::$hlock_blocked_file, static::$log_lines_count, true);
+        if (is_file(static::$config['hlock_blocked_file']) && filesize(static::$config['hlock_blocked_file']) > 6000) {
+            $lines = self::read_lines_from_file(static::$config['hlock_blocked_file'], static::$config['log_lines_count'], true);
             if ($lines !== false && is_string($lines))
-                file_put_contents(static::$hlock_blocked_file, $lines);
+                file_put_contents(static::$config['hlock_blocked_file'], $lines);
         }
     }
 
@@ -218,7 +215,7 @@ class hlock {
     protected static function block_bad_bots() {
         $badbots = self::get_bad_bots();
         if ($_SERVER['HTTP_USER_AGENT'] != str_ireplace($badbots, '*', $_SERVER['HTTP_USER_AGENT'])) {
-            $fp = fopen(static::$hlock_blocked_file, 'a+');
+            $fp = fopen(static::$config['hlock_blocked_file'], 'a+');
             fwrite($fp, implode("\t", array(
                 date('Y-m-d H:i:s'),
                 $_SERVER['HTTP_USER_AGENT'],
@@ -249,7 +246,7 @@ class hlock {
         # print_r($badips);die;
 
         if (in_array($_SERVER['REMOTE_ADDR'], $badips)) {
-            $fp = fopen(static::$hlock_blocked_file, 'a+');
+            $fp = fopen(static::$config['hlock_blocked_file'], 'a+');
             fwrite($fp, implode("\t", array(
                 date('Y-m-d H:i:s'),
                 $_SERVER['HTTP_USER_AGENT'],
@@ -266,8 +263,8 @@ class hlock {
      * @return
      */
     protected static function get_bad_bots() {
-        if (is_file(static::$badbots_file)) {
-            return explode(PHP_EOL, file_get_contents(static::$badbots_file));
+        if (is_file(static::$config['badbots_file'])) {
+            return explode(PHP_EOL, file_get_contents(static::$config['badbots_file']));
         }
         else
             return array();
@@ -279,8 +276,8 @@ class hlock {
      * @return
      */
     protected static function get_bad_ips() {
-        if (is_file(static::$badips_file)) {
-            return explode(PHP_EOL, file_get_contents(static::$badips_file));
+        if (is_file(static::$config['badips_file'])) {
+            return explode(PHP_EOL, file_get_contents(static::$config['badips_file']));
         }
         else
             return array();
@@ -333,8 +330,8 @@ class hlock {
             }
         }
         $ip_list = array_unique($ip_list);
-        file_put_contents(static::$badips_file, trim(implode(PHP_EOL, $ip_list)));
-        file_put_contents(static::$badbots_file, stripslashes($FORM['bad_bots']));
+        file_put_contents(static::$config['badips_file'], trim(implode(PHP_EOL, $ip_list)));
+        file_put_contents(static::$config['badbots_file'], stripslashes($FORM['bad_bots']));
     }
 
     /**
@@ -349,7 +346,7 @@ class hlock {
             $ip_list = self::get_bad_ips();
             $ip_list[] = trim($ip);
             $ip_list = array_unique($ip_list);
-            file_put_contents(static::$badips_file, implode(PHP_EOL, $ip_list));
+            file_put_contents(static::$config['badips_file'], implode(PHP_EOL, $ip_list));
         }
     }
 
@@ -362,7 +359,7 @@ class hlock {
     public static function remove_ip($ip) {
         $ip_list = self::get_bad_ips();
         $ip_list = array_diff($ip_list, array($ip));
-        file_put_contents(static::$badips_file, implode(PHP_EOL, $ip_list));
+        file_put_contents(static::$config['badips_file'], implode(PHP_EOL, $ip_list));
     }
 
     /**
@@ -403,8 +400,8 @@ class hlock {
         if ($cracktrack != $checkworm) {
             self::add_ip($_SERVER['REMOTE_ADDR']);
             self::report_hack('SQL Injection blocked');
-            if (static::$email != "") {
-                $nachricht = 'Hacking blocked [SQLINJECTION]: ' . PHP_EOL;
+            if (filter_var(static::$email, FILTER_VALIDATE_EMAIL)) {
+                $mail_msg = 'Hacking blocked [SQLINJECTION]: ' . PHP_EOL;
                 $arr = array(
                     'IP' => $_SERVER['REMOTE_ADDR'],
                     'Host' => $_SERVER['HTTP_HOST'],
@@ -413,10 +410,10 @@ class hlock {
                     'cracktrack' => $cracktrack,
                     "Hacked" => $checkworm);
                 foreach ($arr as $key => $value) {
-                    $nachricht .= $key . ":\t" . $value . PHP_EOL;
+                    $mail_msg .= $key . ":\t" . $value . PHP_EOL;
                 }
-                $header = 'From: ' . static::$email . "\r\n" . 'Reply-To: ' . static::$email . "\r\n" . 'X-Mailer: PHP/' . phpversion();
-                mail(static::$email, 'IP blocked: [SQLINJECTION] ' . $_SERVER['HTTP_HOST'], $nachricht, $header, '-f' . static::$email);
+                $header = 'From: ' . static::$config['email'] . "\r\n" . 'Reply-To: ' . static::$config['email'] . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+                mail(static::$config['email'], 'IP blocked: [SQLINJECTION] ' . $_SERVER['HTTP_HOST'], $mail_msg, $header, '-f' . static::$config['email']);
             }
             self::exit_env('INJECT');
         }
@@ -449,14 +446,15 @@ class hlock {
      * @return void
      */
     public static function get_black_list() {
-        if (is_file(static::$hlock_blacklist) && (integer)(time() - filemtime(static::$hlock_blacklist)) > (static::$blacklis_lifetime_hours * 3600)) {
-            @unlink(static::$hlock_blacklist);
+        if (is_file(static::$config['hlock_blacklist']) && (integer)(time() - filemtime(static::$config['hlock_blacklist'])) > (static::$config['blacklis_lifetime_hours'] *
+            3600)) {
+            @unlink(static::$config['hlock_blacklist']);
         }
 
-        if (!is_file(static::$hlock_blacklist)) {
-            self::curl_get_data_to_file('https://www.keimeno.de/report-hack.html?cmd=get_black_iplist&FORM[host]=' . $_SERVER['HTTP_HOST'], static::$hlock_blacklist);
+        if (!is_file(static::$config['hlock_blacklist'])) {
+            self::curl_get_data_to_file('https://www.keimeno.de/report-hack.html?cmd=get_black_iplist&FORM[host]=' . $_SERVER['HTTP_HOST'], static::$config['hlock_blacklist']);
         }
-        return file_get_contents(static::$hlock_blacklist);
+        return file_get_contents(static::$config['hlock_blacklist']);
     }
 
     /**
