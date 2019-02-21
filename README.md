@@ -1,7 +1,9 @@
 # hlock
-##Blocks SQL Injection, bad bots and bad IPs
+## Blocks SQL Injection, bad bots and bad IPs
 
 **Join our global network to protect your pages from hackers.** 
+
+**Autodetects WordPress,TYPO3,Keimeno**
 
 - central server for bad ips,bots and injection filter
 - reports to central server
@@ -16,11 +18,13 @@ Be part of the network and help us to get the web safer!
 This version is compatible with keimeno CMS, but can easly changed to be compatible with Wordpress, Joomla and Typo3.
 Just change the path to files and ensure the HLOCK_ROOT is successfully set.
  
-How to implement?
-add in your project index.php:
-<code>
-  require (CMS_ROOT . 'includes/hlock.class.php');
+### Quick implementation
+**add in your project index.php:**
+
+```php
+  <?PHP
+  require ('./includes/hlock.class.php');
   hlock::run();
-</code> 
+```
  
-The keimenbo CMS includes the hlock project is already in the core.
+The keimenbo CMS includes the hlock project already, it is in the core implemented.
