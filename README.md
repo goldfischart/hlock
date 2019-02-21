@@ -1,7 +1,7 @@
 # hlock
-Blocks SQL Injection, bad bots and bad IPs
+##Blocks SQL Injection, bad bots and bad IPs
 
-Join our global network to protect your pages from hackers. 
+**Join our global network to protect your pages from hackers.** 
 
 - central server for bad ips,bots and injection filter
 - reports to central server
@@ -18,7 +18,9 @@ Just change the path to files and ensure the HLOCK_ROOT is successfully set.
  
 How to implement?
 add in your project index.php:
+<code>
   require (CMS_ROOT . 'includes/hlock.class.php');
   hlock::run();
+</code> 
  
 The keimenbo CMS includes the hlock project is already in the core.
