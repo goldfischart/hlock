@@ -5,7 +5,7 @@
  * PHP Version 7
  *
  * @see       https://github.com/Trebaxa/hlock
- *
+ * @version   1.1  
  * @author    Harald Petrich <service@trebaxa.com>
  * @copyright 2018 - 2019 Harald Petrich
  * @license   GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
@@ -17,18 +17,33 @@
  *  
  * This version is compatible with keimeno CMS, but can easly changed to be compatible with Wordpress, Joomla and Typo3.
  * Just change the path to files and ensure the HLOCK_ROOT is successfully set.
+ * 
+ * Install WordPress
+ * 1. add hlock.class.php to folder /wp-include
+ * 2. add PHP code to index.php in root: require ( './wp-includes/hlock.class.php');hlock::run();
+ * 
+ * Install TYPO3
+ * 1. add hlock.class.php to folder / where index.php is located
+ * 2. add PHP code to index.php in root: require ( './wp-includes/hlock.class.php');hlock::run();
+ * 
+ * Install Keimeno
+ * 1. already implemented ;-)
+ * 2. Take the better CMS
  */
 
-$dir = str_replace(DIRECTORY_SEPARATOR, '/', realpath(dirname(__FILE__)));
-$dir = str_replace("/includes", "/", $dir);
-define('HLOCK_ROOT', $dir);
+# define subpath of your project. last char must be a /
+define('SUB_PATH_OF_SYSTEM', '');
+# define your project root where index.php is stored
+define('HLOCK_ROOT', $_SERVER['DOCUMENT_ROOT'] . (substr($_SERVER['DOCUMENT_ROOT'], -1) == DIRECTORY_SEPARATOR ? '' : DIRECTORY_SEPARATOR)) . SUB_PATH_OF_SYSTEM;
+#defines your host
 define('HLOCK_HOST', str_replace('www.', '', $_SERVER['HTTP_HOST']));
 date_default_timezone_set('Europe/Berlin');
 
 class hlock {
-
+    # standard setting for keimeno CMS
     protected static $config = array(
-        'hpath' => HLOCK_ROOT . 'cache/accesslog/',
+        'hpath' => HLOCK_ROOT . 'includes/lib/hlock/accesslog/',
+        'sub_folder' => HLOCK_ROOT . 'includes/lib/hlock/',
         'hlock_blocked_file' => HLOCK_ROOT . 'includes/lib/hlock/hacklogblock_' . HLOCK_HOST . '.txt',
         'hlock_blacklist' => HLOCK_ROOT . 'includes/lib/hlock/blacklist.json',
         'badips_file' => HLOCK_ROOT . 'includes/lib/hlock/badips_' . HLOCK_HOST . '.txt',
@@ -40,13 +55,91 @@ class hlock {
         );
 
     /**
+     * hlock::auto_detect_system()
+     * 
+     * @return void
+     */
+    protected static function auto_detect_system() {
+        # detect Keimeno CMS
+        if (is_dir(HLOCK_ROOT . 'admin') && is_file(HLOCK_ROOT . 'admin/inc/keimeno.class.php')) {
+            self::set_config_arr(array(
+                'hpath' => HLOCK_ROOT . 'includes/lib/hlock/accesslog/',
+                'sub_folder' => HLOCK_ROOT . 'includes/lib/hlock/',
+                'hlock_blocked_file' => HLOCK_ROOT . 'includes/lib/hlock/hacklogblock_' . HLOCK_HOST . '.txt',
+                'hlock_blacklist' => HLOCK_ROOT . 'includes/lib/hlock/blacklist.json',
+                'badips_file' => HLOCK_ROOT . 'includes/lib/hlock/badips_' . HLOCK_HOST . '.txt',
+                'badbots_file' => HLOCK_ROOT . 'includes/lib/hlock/badbots_' . HLOCK_HOST . '.txt',
+                ));
+        }
+        
+        # detect WordPress
+        if (is_dir(HLOCK_ROOT . 'wp-admin')) {
+            self::set_config_arr(array(
+                'sub_folder' => HLOCK_ROOT . 'wp-content/hlock/',
+                'hpath' => HLOCK_ROOT . 'wp-content/hlock/accesslog/',
+                'hlock_blocked_file' => HLOCK_ROOT . 'wp-content/hlock/hacklogblock_' . HLOCK_HOST . '.txt',
+                'hlock_blacklist' => HLOCK_ROOT . 'wp-content/hlock/blacklist.json',
+                'badips_file' => HLOCK_ROOT . 'wp-content/hlock/badips_' . HLOCK_HOST . '.txt',
+                'badbots_file' => HLOCK_ROOT . 'wp-content/hlock/badbots_' . HLOCK_HOST . '.txt',
+                ));
+        }
+
+        #detect TYPO3
+        if (is_dir(HLOCK_ROOT . 'fileadmin') && is_dir(HLOCK_ROOT . 'typo3conf')) {
+            self::set_config_arr(array(
+                'sub_folder' => HLOCK_ROOT . 'fileadmin/hlock/',
+                'hpath' => HLOCK_ROOT . 'fileadmin/hlock/accesslog/',
+                'hlock_blocked_file' => HLOCK_ROOT . 'fileadmin/hlock/hacklogblock_' . HLOCK_HOST . '.txt',
+                'hlock_blacklist' => HLOCK_ROOT . 'fileadmin/hlock/blacklist.json',
+                'badips_file' => HLOCK_ROOT . 'fileadmin/hlock/badips_' . HLOCK_HOST . '.txt',
+                'badbots_file' => HLOCK_ROOT . 'fileadmin/hlock/badbots_' . HLOCK_HOST . '.txt',
+                ));
+        }
+
+        if (!is_dir(static::$config['sub_folder']))
+            mkdir(static::$config['sub_folder'], 0755);
+        if (!is_dir(static::$config['hpath']))
+            mkdir(static::$config['hpath'], 0755);
+    }
+
+    /**
+     * hlock::_p()
+     * 
+     * @param mixed $arr
+     * @return void
+     */
+    public static function _p($arr) {
+        echo '<pre>' . print_r((array )$arr, 1) . '</pre>';
+    }
+
+    /**
+     * hlock::set_config_value()
+     * 
+     * @param mixed $key
+     * @param mixed $value
+     * @return void
+     */
+    protected static function set_config_value($key, $value) {
+        static::$config[$key] = $value;
+    }
+
+    /**
+     * hlock::set_config_arr()
+     * 
+     * @param mixed $arr
+     * @return void
+     */
+    protected static function set_config_arr($arr) {
+        static::$config = array_merge(static::$config, $arr);
+    }
+
+    /**
      * hlock::run()
      * 
      * @return void
      */
     public static function run() {
-        if (!is_dir(static::$config['hpath']))
-            mkdir(static::$config['hpath'], 0755);
+        self::auto_detect_system();
 
         if ($handle = opendir(static::$config['hpath'])) {
             while (false !== ($file = readdir($handle))) {
