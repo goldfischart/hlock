@@ -24,7 +24,7 @@ Just change the path to files and ensure the HLOCK_ROOT is successfully set.
 ```php
   <?PHP
   require ('./includes/hlock.class.php');
-  hlock::run();
+  hlock::run(dirname(__FILE__));
 ```
  
 The keimenbo CMS includes the hlock project already, it is in the core implemented.
