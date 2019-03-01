@@ -15,8 +15,7 @@ This project should help us developer to protect our PHP projects from hacking. 
 and hlock updates hisself with a current list of bad ips, bots and SQL injection rules.
 Be part of the network and help us to get the web safer!
  
-This version is compatible with keimeno CMS, but can easly changed to be compatible with Wordpress, Joomla and Typo3.
-Just change the path to files and ensure the HLOCK_ROOT is successfully set.
+This version is compatible with keimeno CMS, but can easly changed to your individuel product. It autodetects Wordpress, Joomla and Typo3.
  
 ### Quick implementation
 **add in your project index.php:**
