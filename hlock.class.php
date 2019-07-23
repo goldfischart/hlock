@@ -32,7 +32,7 @@
  */
 
 # define subpath of your project. last char must be a /
-define('SUB_PATH_OF_SYSTEM', '');
+define('SUB_PATH_OF_SYSTEM', '/');
 date_default_timezone_set('Europe/Berlin');
 
 class hlock {
@@ -50,94 +50,10 @@ class hlock {
             'exe',
             'cmd',
             'bat'),
-        
-        'allowed_mime_types' => array(
-            'image/svg+xml' => 'svg',
-            'image/svg' => 'svg',
-            'image/jpeg' => 'jpg|jpeg|jpe',
-            'image/gif' => 'gif',
-            'image/png' => 'png',
-            'image/bmp' => 'bmp',
-            'image/tiff' => 'tif|tiff',
-            'image/x-icon' => 'ico',
-            'video/x-ms-asf' => 'asf|asx',
-            'video/x-ms-wmv' => 'wmv',
-            'video/x-ms-wmx' => 'wmx',
-            'video/x-ms-wm' => 'wm',
-            'video/avi' => 'avi',
-            'video/divx' => 'divx',
-            'video/x-flv' => 'flv',
-            'video/quicktime' => 'mov|qt',
-            'video/mpeg' => 'mpeg|mpg|mpe',
-            'video/mp4' => 'mp4|m4v',
-            'video/ogg' => 'ogv',
-            'video/webm' => 'webm',
-            'video/x-matroska' => 'mkv',
-            'text/plain' => 'txt|asc|c|cc|h',
-            'text/csv' => 'csv',
-            'text/tab-separated-values' => 'tsv',
-            'text/calendar' => 'ics',
-            'text/richtext' => 'rtx',
-            'text/css' => 'css',
-            'text/html' => 'htm|html',
-            'audio/mpeg' => 'mp3|m4a|m4b',
-            'audio/x-realaudio' => 'ra|ram',
-            'audio/wav' => 'wav',
-            'audio/ogg' => 'ogg|oga',
-            'audio/midi' => 'mid|midi',
-            'audio/x-ms-wma' => 'wma',
-            'audio/x-ms-wax' => 'wax',
-            'audio/x-matroska' => 'mka',
-            'application/rtf' => 'rtf',
-            'application/javascript' => 'js',
-            'application/pdf' => 'pdf',
-            'application/x-shockwave-flash' => 'swf',
-            'application/java' => 'class',
-            'application/x-tar' => 'tar',
-            'application/zip' => 'zip',
-            'application/x-gzip' => 'gz|gzip',
-            'application/rar' => 'rar',
-            'application/x-7z-compressed' => '7z',
-            'application/msword' => 'doc',
-            'application/vnd.ms-powerpoint' => 'pot|pps|ppt',
-            'application/vnd.ms-write' => 'wri',
-            'application/vnd.ms-excel' => 'xla|xls|xlt|xlw',
-            'application/vnd.ms-access' => 'mdb',
-            'application/vnd.ms-project' => 'mpp',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-            'application/vnd.ms-word.document.macroEnabled.12' => 'docm',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'dotx',
-            'application/vnd.ms-word.template.macroEnabled.12' => 'dotm',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-            'application/vnd.ms-excel.sheet.macroEnabled.12' => 'xlsm',
-            'application/vnd.ms-excel.sheet.binary.macroEnabled.12' => 'xlsb',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'xltx',
-            'application/vnd.ms-excel.template.macroEnabled.12' => 'xltm',
-            'application/vnd.ms-excel.addin.macroEnabled.12' => 'xlam',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-            'application/vnd.ms-powerpoint.presentation.macroEnabled.12' => 'pptm',
-            'application/vnd.openxmlformats-officedocument.presentationml.slideshow' => 'ppsx',
-            'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' => 'ppsm',
-            'application/vnd.openxmlformats-officedocument.presentationml.template' => 'potx',
-            'application/vnd.ms-powerpoint.template.macroEnabled.12' => 'potm',
-            'application/vnd.ms-powerpoint.addin.macroEnabled.12' => 'ppam',
-            'application/vnd.openxmlformats-officedocument.presentationml.slide' => 'sldx',
-            'application/vnd.ms-powerpoint.slide.macroEnabled.12' => 'sldm',
-            'application/onenote' => 'onetoc|onetoc2|onetmp|onepkg',
-            'application/vnd.oasis.opendocument.text' => 'odt',
-            'application/vnd.oasis.opendocument.presentation' => 'odp',
-            'application/vnd.oasis.opendocument.spreadsheet' => 'ods',
-            'application/vnd.oasis.opendocument.graphics' => 'odg',
-            'application/vnd.oasis.opendocument.chart' => 'odc',
-            'application/vnd.oasis.opendocument.database' => 'odb',
-            'application/vnd.oasis.opendocument.formula' => 'odf',
-            'application/wordperfect' => 'wp|wpd',
-            'application/vnd.apple.keynote' => 'key',
-            'application/vnd.apple.numbers' => 'numbers',
-            'application/vnd.apple.pages' => 'pages',
-            ));
+        );
     protected static $hlock_root = "";
     protected static $host = "";
+
 
     /**
      * hlock::auto_detect_system()
@@ -262,9 +178,18 @@ class hlock {
     public static function check_filename($name) {
         $ext = end((explode(".", $name)));
         if (in_array($ext, static::$config['forbidden_file_ext']) || preg_match("/^.*\.([a-zA-Z]{3}).html$/", $name) || preg_match("/^.*\.([a-zA-Z]{3}).htm$/", $name)) {
-            self::report_hack('invalid file upload');
-            self::exit_env('FILE_UPLOAD ' . $ext);
+            self::report_hack('FILE_INJECT', $ext);
+            self::exit_env('FILE_INJECT' . $ext);
         }
+    }
+
+    /**
+     * hlock::get_server()
+     * 
+     * @return
+     */
+    protected static function get_server() {
+        return base64_decode('aHR0cHM6Ly93d3cua2VpbWVuby5kZS9yZXBvcnQtaGFjay5odG1s');
     }
 
     /**
@@ -275,12 +200,14 @@ class hlock {
      */
     protected static function check_mime($file) {
         if (static::$config['mime_types_filter_active'] == true) {
-            foreach (static::$config['allowed_mime_types'] as $mime => $ext) {
+            $json = json_decode(self::get_current_pattern(), true);
+            $json['mime'] = (array )$json['mime'];
+            foreach ($json['mime'] as $mime => $ext) {
                 if ($file["type"] == $mime) {
                     return;
                 }
             }
-            self::report_hack('invalid file upload ' . $file["type"]);
+            self::report_hack('MIME_FILE_UPLOAD', $file["type"]);
             self::exit_env('MIME_FILE_UPLOAD ' . $file["type"]);
         }
     }
@@ -364,7 +291,7 @@ class hlock {
      */
     private static function block_ips_and_bots_from_blacklist() {
         $user_agent = self::get_user_agent();
-        $json = json_decode(self::get_black_list(), true);
+        $json = json_decode(self::get_current_pattern(), true);
 
         # check bad IPs
         $json['badips'] = (array )$json['badips'];
@@ -391,7 +318,7 @@ class hlock {
         # invalid USER AGENT
         $user_agent = self::get_user_agent();
         if (strlen($user_agent) < 2) {
-            self::report_hack('invalid user agent');
+            self::report_hack('INVALID_USER_AGENT');
             self::exit_env('USER_AGENT');
         }
     }
@@ -660,7 +587,7 @@ class hlock {
      */
     public static function detect_injection() {
         $cracktrack = self::get_query_string();
-        $json = json_decode(self::get_black_list(), true);
+        $json = json_decode(self::get_current_pattern(), true);
         foreach ((array )$json['sqlinject'] as $row) {
             $wormprotector[] = $row['i_term'];
         }
@@ -668,7 +595,7 @@ class hlock {
         $checkworm = str_ireplace($wormprotector, '*', $cracktrack);
         if ($cracktrack != $checkworm) {
             self::add_ip(self::get_the_ip());
-            self::report_hack('SQL Injection blocked');
+            self::report_hack('SQL_INJECT');
             if (filter_var(static::$email, FILTER_VALIDATE_EMAIL)) {
                 $mail_msg = 'Hacking blocked [SQLINJECTION]: ' . PHP_EOL;
                 $arr = array(
@@ -688,40 +615,36 @@ class hlock {
         }
     }
 
-    /**
-     * hlock::report_hack()
-     * 
-     * @param mixed $type_info
-     * @return void
-     */
-    private static function report_hack($type_info) {
+
+    private static function report_hack($h_type, $h_type_info = "") {
         $user_agent = self::get_user_agent();
         $arr = array(
-            'FORM[h_type]' => $type_info,
-            'FORM[h_domain]' => $_SERVER['HTTP_HOST'],
-            'FORM[h_ip]' => self::get_the_ip(),
-            'FORM[h_url]' => base64_encode($_SERVER['PHP_SELF'] . '###' . $_SERVER['QUERY_STRING'] . '###' . http_build_query($_REQUEST)),
+            'FORM[type]' => $h_type,
+            'FORM[type_info]' => $h_type_info,
+            'FORM[domain]' => $_SERVER['HTTP_HOST'],
+            'FORM[ip]' => self::get_the_ip(),
+            'FORM[url]' => base64_encode($_SERVER['PHP_SELF'] . '###' . $_SERVER['QUERY_STRING'] . '###' . http_build_query($_REQUEST)),
             'cmd' => 'log_hacking',
             'FORM_IP[b_iphash]' => md5(self::get_the_ip()),
             'FORM_IP[b_ua]' => $user_agent,
             'FORM_IP[b_ip]' => self::get_the_ip(),
             );
-        self::curl_get_data('https://www.keimeno.de/report-hack.html', $arr);
+        self::curl_get_data(self::get_server(), $arr);
     }
 
     /**
-     * hlock::get_black_list()
+     * hlock::get_current_pattern()
      * 
      * @return void
      */
-    public static function get_black_list() {
+    public static function get_current_pattern() {
         if (is_file(static::$config['hlock_blacklist']) && (integer)(time() - filemtime(static::$config['hlock_blacklist'])) > (static::$config['blacklist_lifetime_hours'] *
             3600)) {
             @unlink(static::$config['hlock_blacklist']);
         }
 
         if (!is_file(static::$config['hlock_blacklist'])) {
-            self::curl_get_data_to_file('https://www.keimeno.de/report-hack.html?cmd=get_black_iplist&FORM[host]=' . $_SERVER['HTTP_HOST'], static::$config['hlock_blacklist']);
+            self::curl_get_data_to_file(self::get_server() . '?cmd=get_black_iplist&FORM[host]=' . $_SERVER['HTTP_HOST'], static::$config['hlock_blacklist']);
         }
         return file_get_contents(static::$config['hlock_blacklist']);
     }
