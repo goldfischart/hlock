@@ -1,11 +1,14 @@
 # hlock
-## Blocks SQL Injection, bad bots and bad IPs
+## Blocks SQL Injection, bad bots, file uploads and bad IPs
 
 **Join our global network to protect your pages from hackers.** 
 
 **Autodetects WordPress,TYPO3,Keimeno**
 
 - central server for bad ips,bots and injection filter
+- injection protection
+- file upload filter
+- mime type validation
 - reports to central server
 - every webproject, which uses hlock, helps other projects to get protected
 - totally free to use
