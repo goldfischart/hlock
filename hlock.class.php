@@ -4,8 +4,8 @@
  * hlock class
  * PHP Version 7
  *
- * @see       https://github.com/Trebaxa/hlock
- * @version   1.5  
+ * @see       https://github.com/trebaxa/hlock
+ * @version   1.6  
  * @author    Harald Petrich <service@trebaxa.com>
  * @copyright 2018 - 2019 Harald Petrich
  * @license   GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
@@ -199,6 +199,9 @@ class hlock {
      * @return void
      */
     protected static function check_mime($file) {
+        if (!isset($file["type"])) {
+            return;
+        }
         if (static::$config['mime_types_filter_active'] == true) {
             $json = json_decode(self::get_current_pattern(), true);
             $json['mime'] = (array )$json['mime'];
@@ -220,7 +223,7 @@ class hlock {
     public static function file_upload_protection() {
         if (isset($_FILES)) {
             foreach ($_FILES as $key => $row) {
-                $ext = end((explode(".", $_FILES[$key]["name"])));
+                #$ext = end((explode(".", $_FILES[$key]["name"])));
                 if (!is_array($_FILES[$key]["name"])) {
                     self::check_filename($_FILES[$key]["name"]);
                     self::check_mime($row);
@@ -318,7 +321,7 @@ class hlock {
         # invalid USER AGENT
         $user_agent = self::get_user_agent();
         if (strlen($user_agent) < 2) {
-            self::report_hack('INVALID_USER_AGENT');
+            self::report_hack('INVALID_USER_AGENT', $user_agent);
             self::exit_env('USER_AGENT');
         }
     }
@@ -418,6 +421,7 @@ class hlock {
                 'AGENT',
                 self::get_the_ip())) . PHP_EOL);
             fclose($fp);
+            self::report_hack('BAD_BOT', $_SERVER['HTTP_USER_AGENT']);
             self::exit_env('BOT');
         }
     }
@@ -447,6 +451,7 @@ class hlock {
                 'IP',
                 self::get_the_ip())) . PHP_EOL);
             fclose($fp);
+            self::report_hack('BAD_IP', self::get_the_ip());
             self::exit_env('IP');
         }
     }
@@ -616,20 +621,46 @@ class hlock {
     }
 
 
+    /**
+     * hlock::report_hack()
+     * 
+     * @param mixed $h_type
+     * @param string $h_type_info
+     * @return void
+     */
     private static function report_hack($h_type, $h_type_info = "") {
-        $user_agent = self::get_user_agent();
         $arr = array(
             'FORM[type]' => $h_type,
-            'FORM[type_info]' => $h_type_info,
+            'FORM[type_info]' => 'HL ' . $h_type_info,
             'FORM[domain]' => $_SERVER['HTTP_HOST'],
             'FORM[ip]' => self::get_the_ip(),
             'FORM[url]' => base64_encode($_SERVER['PHP_SELF'] . '###' . $_SERVER['QUERY_STRING'] . '###' . http_build_query($_REQUEST)),
             'cmd' => 'log_hacking',
             'FORM_IP[b_iphash]' => md5(self::get_the_ip()),
-            'FORM_IP[b_ua]' => $user_agent,
+            'FORM_IP[b_ua]' => self::get_user_agent(),
             'FORM_IP[b_ip]' => self::get_the_ip(),
             );
         self::curl_get_data(self::get_server(), $arr);
+        # file_put_contents(static::$hlock_root . 'hlock.txt', http_build_query($arr));
+    }
+
+    /**
+     * hlock::get_lock()
+     * 
+     * @param mixed $days
+     * @return void
+     */
+    public static function get_lock($days, $limit = 0) {
+        $domain = $_SERVER['HTTP_HOST'];
+        $days = (int)$days;
+        $arr = array(
+            'cmd' => 'get_lock',
+            'days' => $days,
+            'limit' => (int)$limit,
+            'd' => $domain,
+            'hash' => hash('sha256', $domain . $days . date('YmdHi')));
+        $str = self::curl_get_data(self::get_server(), $arr);
+        return json_decode($str, true);
     }
 
     /**
